@@ -1,7 +1,7 @@
 plugins {
     id 'maven-publish'
     alias catalog.plugins.envelope
-    alias catalog.plugins.kotlin
+    alias catalog.plugins.kotlin.jvm
     alias catalog.plugins.multi.release.jar
 }
 

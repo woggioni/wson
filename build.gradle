@@ -65,12 +65,6 @@ compileJava {
     options.compilerArgs << '-parameters'
 }
 
-wrapper {
-    distributionType = Wrapper.DistributionType.BIN
-    gradleVersion = getProperty("gradle.version")
-}
-
-
 publishing {
     repositories {
         maven {
