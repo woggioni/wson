@@ -1,5 +1,6 @@
 plugins {
     id 'maven-publish'
+    alias catalog.plugins.envelope apply false
     alias catalog.plugins.lombok apply false
     alias catalog.plugins.multi.release.jar
 }

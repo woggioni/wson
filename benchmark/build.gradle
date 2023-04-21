@@ -1,14 +1,14 @@
 plugins {
-    id 'application'
+    alias(catalog.plugins.envelope)
 }
 
-application {
-    mainClassName = 'net.woggioni.wson.benchmark.Main'
-    applicationDefaultJvmArgs = ['-Xmx8G']
+envelopeJar {
+    mainClass = 'net.woggioni.wson.benchmark.Main'
 }
 
-run {
-    commandLine
+envelopeRun {
+    jvmArgs = ['-Xmx8G']
+    args = ['jacksonBenchmark', 'worthJsonBenchmark', 'worthJbonBenchmark', 'antlrBenchmark']
 }
 
 dependencies {
