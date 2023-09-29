@@ -4,8 +4,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import net.woggioni.wson.xface.Value;
 
-import java.util.Objects;
-
 @EqualsAndHashCode
 public class StringValue implements Value {
 

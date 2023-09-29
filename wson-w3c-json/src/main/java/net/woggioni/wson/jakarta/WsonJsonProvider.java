@@ -12,7 +12,6 @@ import jakarta.json.stream.JsonGenerator;
 import jakarta.json.stream.JsonGeneratorFactory;
 import jakarta.json.stream.JsonParser;
 import jakarta.json.stream.JsonParserFactory;
-import net.woggioni.wson.value.ObjectValue;
 
 import java.io.InputStream;
 import java.io.OutputStream;

@@ -39,10 +39,6 @@ allprojects {
     test {
         useJUnitPlatform()
     }
-
-    java {
-        modularity.inferModulePath = true
-    }
 }
 
 ext {

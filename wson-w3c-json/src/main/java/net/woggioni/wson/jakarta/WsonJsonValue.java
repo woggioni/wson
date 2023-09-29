@@ -1,23 +1,8 @@
 package net.woggioni.wson.jakarta;
 
-import jakarta.json.JsonArray;
-import jakarta.json.JsonNumber;
-import jakarta.json.JsonObject;
-import jakarta.json.JsonString;
 import jakarta.json.JsonValue;
 import lombok.RequiredArgsConstructor;
-import net.woggioni.jwo.CollectionUtils;
-import net.woggioni.jwo.JWO;
 import net.woggioni.wson.xface.Value;
-
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.Set;
-
-import static net.woggioni.jwo.JWO.newThrowable;
 
 @RequiredArgsConstructor
 public class WsonJsonValue implements JsonValue {

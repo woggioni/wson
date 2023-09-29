@@ -4,7 +4,10 @@ import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import net.woggioni.wson.xface.Value;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
 @EqualsAndHashCode
 public class ArrayValue implements Value, Iterable<Value> {
