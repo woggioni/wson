@@ -1,0 +1,23 @@
+default := {
+    "foo" : 2,
+    "bar" : true
+};
+
+overridden := default << {
+    "foo" : 0,
+    "enabled" : false,
+    "window" : null
+};
+
+window := {
+    "width" : 640,
+    "height" : 480
+};
+
+foobar := {
+    "child" : overridden << {
+        "window" : window
+    } << {
+        "enabled" : true
+    }
+};

@@ -1,0 +1,16 @@
+plugins {
+    id 'antlr'
+}
+
+dependencies {
+    implementation catalog.jwo
+    implementation rootProject
+
+    antlr catalog.antlr
+    antlr catalog.antlr.runtime
+}
+
+generateGrammarSource {
+    maxHeapSize = "64m"
+    arguments += ['-package', 'net.woggioni.wson.wcfg']
+}

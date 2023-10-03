@@ -1,0 +1,4 @@
+value1 := {
+    "key" : "value",
+    "myself" : value1
+};
