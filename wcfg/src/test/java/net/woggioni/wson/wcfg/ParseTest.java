@@ -25,7 +25,8 @@ public class ParseTest {
     @ValueSource(strings = {
 //        "build.wcfg",
 //        "test.wcfg",
-        "recursive.wcfg",
+//        "recursive.wcfg",
+        "recursive2.wcfg",
     })
     public void test(String resource) {
         try(Reader reader = new InputStreamReader(getClass().getClassLoader().getResourceAsStream(resource))) {
@@ -37,6 +38,7 @@ public class ParseTest {
             ListenerImpl listener = new ListenerImpl(cfg);
             ParseTreeWalker walker = new ParseTreeWalker();
             walker.walk(listener, parser.wcfg());
+            listener.replaceHolders();
             Value result = listener.getResult();
             new JSONDumper(cfg).dump(result, System.out);
         }

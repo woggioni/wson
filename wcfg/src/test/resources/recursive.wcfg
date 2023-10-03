@@ -4,3 +4,5 @@ value1 := {
 };
 
 value2 := [value1];
+
+value3 := [1, 2, value3, null, false];

@@ -25,6 +25,8 @@ class ListenerImpl implements WCFGListener {
     @Getter
     private final Value result;
 
+    private final List<ValueHolder> holders = new ArrayList<>();
+
     private interface StackLevel {
         Value getValue();
     }
@@ -74,15 +76,22 @@ class ListenerImpl implements WCFGListener {
 
     private void add2Last(Value value) {
         StackLevel last = stack.get(stack.size() - 1);
-        ArrayStackLevel asl;
-        ObjectStackLevel osl;
-        ExpressionStackLevel esl;
-        if ((asl = dynamicCast(last, ArrayStackLevel.class)) != null) {
+        if (last instanceof ArrayStackLevel asl) {
             asl.value.add(value);
-        } else if ((osl = dynamicCast(last, ObjectStackLevel.class)) != null) {
-            osl.value.put(osl.currentKey, value);
+            if(value instanceof ValueHolder holder) {
+                Value arrayValue = asl.getValue();
+                int index = arrayValue.size() - 1;
+                holder.addDeleter(() -> arrayValue.set(index, holder.getDelegate()));
+            }
+        } else if (last instanceof ObjectStackLevel osl) {
+            String key = osl.currentKey;
             osl.currentKey = null;
-        } else if((esl = dynamicCast(last, ExpressionStackLevel.class)) != null) {
+            osl.value.put(key, value);
+            if(value instanceof ValueHolder holder) {
+                Value objectValue = osl.getValue();
+                holder.addDeleter(() -> objectValue.put(key, holder.getDelegate()));
+            }
+        } else if(last instanceof ExpressionStackLevel esl) {
             esl.elements.add((ObjectValue) value);
         }
     }
@@ -117,7 +126,12 @@ class ListenerImpl implements WCFGListener {
     @Override
     public void enterAssignment(WCFGParser.AssignmentContext ctx) {
         ObjectStackLevel osl = (ObjectStackLevel) stack.get(0);
-        osl.currentKey = ctx.IDENTIFIER().getText();
+        String key = ctx.IDENTIFIER().getText();
+        osl.currentKey = key;
+        ValueHolder holder = new ValueHolder();
+        holders.add(holder);
+        holder.addDeleter(() -> result.put(key, holder.getDelegate()));
+        result.put(key, holder);
     }
 
     @Override
@@ -222,5 +236,11 @@ class ListenerImpl implements WCFGListener {
     @Override
     public void exitEveryRule(ParserRuleContext ctx) {
 
+    }
+
+    public void replaceHolders() {
+        for(ValueHolder holder : holders) {
+            holder.replace();
+        }
     }
 }

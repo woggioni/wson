@@ -1,12 +1,22 @@
 package net.woggioni.wson.wcfg;
 
+import lombok.Getter;
 import lombok.Setter;
 import net.woggioni.wson.xface.Value;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
-public class ValueHolder implements Value {
+class ValueHolder implements Value {
+    private List<Runnable> deleters = new ArrayList<>();
+
+    public void addDeleter(Runnable runnable) {
+        deleters.add(runnable);
+    }
+
     @Setter
+    @Getter
     private Value delegate = Value.Null;
     @Override
     public Type type() {
@@ -106,5 +116,11 @@ public class ValueHolder implements Value {
     @Override
     public boolean has(String key) {
         return delegate.has(key);
+    }
+
+    public void replace() {
+        for(Runnable run : deleters) {
+            run.run();
+        }
     }
 }
