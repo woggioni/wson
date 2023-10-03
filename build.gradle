@@ -2,8 +2,8 @@ plugins {
     id 'maven-publish'
     alias catalog.plugins.envelope apply false
     alias catalog.plugins.lombok apply false
-    alias catalog.plugins.multi.release.jar
 }
+
 
 allprojects {
     apply plugin: 'java-library'
@@ -11,6 +11,10 @@ allprojects {
 
     group = "net.woggioni"
     version = getProperty('wson.version')
+
+    java {
+        modularity.inferModulePath = true
+    }
 
     lombok {
         version = catalog.versions.lombok.get()
@@ -39,11 +43,20 @@ allprojects {
     test {
         useJUnitPlatform()
     }
+
+    tasks.named(JavaPlugin.COMPILE_JAVA_TASK_NAME, JavaCompile) {
+        options.release = 17
+    }
+
+    pluginManager.withPlugin(catalog.plugins.kotlin.jvm.get().pluginId) {
+        compileKotlin {
+            kotlinOptions.with {
+                jvmTarget = '17'
+            }
+        }
+    }
 }
 
-ext {
-    setProperty('jpms.module.name', 'net.woggioni.wson')
-}
 
 dependencies {
     implementation catalog.jwo

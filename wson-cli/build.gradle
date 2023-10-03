@@ -2,11 +2,6 @@ plugins {
     id 'maven-publish'
     alias catalog.plugins.envelope
     alias catalog.plugins.kotlin.jvm
-    alias catalog.plugins.multi.release.jar
-}
-
-ext {
-    setProperty('jpms.module.name', 'net.woggioni.wson.cli')
 }
 
 dependencies {
@@ -19,16 +14,6 @@ dependencies {
 envelopeJar {
     mainClass = 'net.woggioni.wson.cli.MainKt'
     mainModule = 'net.woggioni.wson.cli'
-}
-
-java {
-    modularity.inferModulePath = true
-}
-
-compileKotlin {
-    kotlinOptions.with {
-        jvmTarget = '1.8'
-    }
 }
 
 publishing {
@@ -44,8 +29,3 @@ publishing {
     }
 }
 
-tasks.register('listConfigurations') {
-    configurations.each {
-        println(it.name)
-    }
-}

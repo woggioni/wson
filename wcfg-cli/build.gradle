@@ -1,0 +1,12 @@
+plugins {
+    alias(catalog.plugins.envelope)
+}
+
+dependencies {
+    implementation catalog.picocli
+    implementation project(':wcfg')
+}
+
+envelopeJar {
+    mainClass = 'net.woggioni.wson.wcfg.cli.Main'
+}

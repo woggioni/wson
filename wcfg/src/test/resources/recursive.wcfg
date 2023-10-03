@@ -2,3 +2,5 @@ value1 := {
     "key" : "value",
     "myself" : value1
 };
+
+value2 := [value1];

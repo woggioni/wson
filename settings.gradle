@@ -31,7 +31,15 @@ dependencyResolutionManagement {
 
 rootProject.name = 'wson'
 
-def includeDirs = ['antlr', 'benchmark', 'test-utils', 'wson-cli', 'wson-w3c-json', 'wcfg']
+def includeDirs = [
+    'antlr',
+    'benchmark',
+    'test-utils',
+    'wson-cli',
+    'wson-w3c-json',
+    'wcfg',
+    'wcfg-cli'
+]
 
 includeDirs.each {
     include(it)
