@@ -21,3 +21,5 @@ foobar := {
         "enabled" : true
     }
 };
+
+export default << foobar;

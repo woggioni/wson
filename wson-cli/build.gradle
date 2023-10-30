@@ -1,19 +1,66 @@
 plugins {
     id 'maven-publish'
     alias catalog.plugins.envelope
-    alias catalog.plugins.kotlin.jvm
+    alias catalog.plugins.graalvm.native.image
+    alias catalog.plugins.sambal
 }
+import net.woggioni.gradle.graalvm.NativeImageTask
+import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
+
 
 dependencies {
-    implementation catalog.kotlin.stdlib.jdk8
-    implementation catalog.jcommander
+    implementation catalog.jwo
+    implementation catalog.picocli
     implementation catalog.slf4j.simple
     implementation rootProject
+    implementation project(':wcfg')
 }
 
-envelopeJar {
-    mainClass = 'net.woggioni.wson.cli.MainKt'
+application {
+    mainClass = 'net.woggioni.wson.cli.WsonCli'
     mainModule = 'net.woggioni.wson.cli'
+}
+
+compileJava {
+    options.compilerArgs = [
+        "--patch-module",
+        "net.woggioni.wson.cli=${sourceSets.main.output.asPath}"
+    ]
+    options.javaModuleMainClass = 'net.woggioni.wson.cli.MainKt'
+    options.javaModuleVersion = project.version
+}
+
+configureNativeImage {
+//    args = [
+//        'wson',
+//        '-f',
+//        '../test-utils/src/main/resources/wordpress.json',
+//        '-t',
+//        'jbon',
+//        '-o',
+//        '/dev/null'
+//    ]
+
+    args = [
+            'wcfg',
+            '-f',
+            '../wcfg/src/test/resources/build.wcfg',
+            '-t',
+            'jbon',
+            '-o',
+            '/dev/null'
+    ]
+
+    mergeConfiguration = true
+}
+
+Provider<NativeImageTask> nativeImageTaskProvider = tasks.named("nativeImage") {
+    useMusl = true
+    buildStaticImage = true
+}
+
+artifacts {
+    archives nativeImageTaskProvider.map(NativeImageTask.&getOutputFile)
 }
 
 publishing {
@@ -25,7 +72,11 @@ publishing {
     publications {
         myDistribution(MavenPublication) {
             artifact envelopeJar
+            def host = DefaultNativePlatform.host()
+            artifact(
+                source: nativeImageTaskProvider,
+                classifier: host.operatingSystem.name + '-' + host.architecture.name
+            )
         }
     }
 }
-

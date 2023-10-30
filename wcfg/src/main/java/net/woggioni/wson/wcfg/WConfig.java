@@ -18,12 +18,14 @@ public class WConfig {
     private final Value value;
 
     @SneakyThrows
-    public WConfig(Reader reader, Value.Configuration cfg) {
+    private WConfig(Reader reader, Value.Configuration cfg) {
         this.cfg = cfg;
         CodePointCharStream inputStream = CharStreams.fromReader(reader);
         WCFGLexer lexer = new WCFGLexer(inputStream);
         CommonTokenStream commonTokenStream = new CommonTokenStream(lexer);
         WCFGParser parser = new WCFGParser(commonTokenStream);
+        parser.removeErrorListeners();
+        parser.addErrorListener(new ErrorHandler());
         ListenerImpl listener = new ListenerImpl(cfg);
         ParseTreeWalker walker = new ParseTreeWalker();
         walker.walk(listener, parser.wcfg());
@@ -43,5 +45,9 @@ public class WConfig {
 
     public Value whole() {
         return value;
+    }
+
+    public static WConfig parse(Reader reader, Value.Configuration cfg) {
+        return new WConfig(reader, cfg);
     }
 }

@@ -2,12 +2,18 @@ plugins {
     id 'antlr'
 }
 
+configurations {
+    api {
+        exclude group: 'org.antlr', module: 'antlr4'
+    }
+}
+
 dependencies {
     implementation catalog.jwo
     implementation rootProject
+    implementation catalog.antlr.runtime
 
     antlr catalog.antlr
-    antlr catalog.antlr.runtime
 }
 
 generateGrammarSource {

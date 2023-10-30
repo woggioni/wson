@@ -1,23 +1,32 @@
 package net.woggioni.wson.wcfg;
 
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import lombok.SneakyThrows;
 import net.woggioni.wson.xface.Value;
+import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
+@RequiredArgsConstructor
 class ValueHolder implements Value {
-    private List<Runnable> deleters = new ArrayList<>();
 
+    @Getter
+    private final TerminalNode node;
+    private List<Runnable> deleters = new ArrayList<>();
     public void addDeleter(Runnable runnable) {
         deleters.add(runnable);
     }
 
     @Setter
     @Getter
-    private Value delegate = Value.Null;
+    private Value delegate = null;
+
     @Override
     public Type type() {
         return delegate.type();

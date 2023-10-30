@@ -7,16 +7,13 @@ import java.io.OutputStreamWriter
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.system.exitProcess
-import com.beust.jcommander.IStringConverter
-import com.beust.jcommander.JCommander
-import com.beust.jcommander.Parameter
-import com.beust.jcommander.ParameterException
-import com.beust.jcommander.converters.PathConverter
 import net.woggioni.wson.serialization.binary.JBONDumper
 import net.woggioni.wson.serialization.binary.JBONParser
 import net.woggioni.wson.serialization.json.JSONDumper
 import net.woggioni.wson.serialization.json.JSONParser
 import net.woggioni.wson.xface.Value
+import org.slf4j.LoggerFactory
+import picocli.CommandLine
 
 
 sealed class SerializationFormat(val name: String) {
@@ -41,88 +38,99 @@ sealed class SerializationFormat(val name: String) {
     }
 }
 
-private class OutputTypeConverter : IStringConverter<SerializationFormat> {
+class OutputTypeConverter : CommandLine.ITypeConverter<SerializationFormat> {
     override fun convert(value: String): SerializationFormat = SerializationFormat.parse(value)
 }
 
-private class CliArg {
 
-    @Parameter(names = ["-f", "--file"], description = "Name of the input file to parse", converter = PathConverter::class)
+class VersionProvider internal constructor() : AbstractVersionProvider("wson-cli")
+
+@CommandLine.Command(
+    name = "wson-cli",
+    versionProvider = VersionProvider::class)
+private class WsonCli : Runnable {
+
+    @CommandLine.Option(
+        names = ["-f", "--file"],
+        description = ["Name of the input file to parse"],
+    )
     var fileName: Path? = null
 
-    @Parameter(names = ["--input-type"], description = "Input type", converter = OutputTypeConverter::class)
+    @CommandLine.Option(
+        names = ["--input-type"],
+        description = ["Input type"],
+        converter = [OutputTypeConverter::class])
     var inputType: SerializationFormat = SerializationFormat.JSON
 
-    @Parameter(names = ["-o", "--output"], description = "Name of the JSON file to generate", converter = PathConverter::class)
+    @CommandLine.Option(names = ["-o", "--output"],
+        description = ["Name of the JSON file to generate"])
     var output: Path? = null
 
-    @Parameter(names = ["-t", "--type"], description = "Output type", converter = OutputTypeConverter::class)
+    @CommandLine.Option(
+        names = ["-t", "--type"],
+        description = ["Output type"],
+        converter = [OutputTypeConverter::class])
     var outputType: SerializationFormat = SerializationFormat.JSON
 
-    @Parameter(names = ["-h", "--help"], help = true)
+    @CommandLine.Option(names = ["-h", "--help"], usageHelp = true)
     var help: Boolean = false
+
+    override fun run() {
+        val cfg = Value.Configuration.builder().serializeReferences(true).build()
+        val inputStream = if (fileName != null) {
+            BufferedInputStream(Files.newInputStream(fileName))
+        } else {
+            System.`in`
+        }
+
+        val result = when(inputType) {
+            SerializationFormat.JSON -> {
+                val reader = InputStreamReader(inputStream)
+                try {
+                    JSONParser(cfg).parse(reader)
+                } finally {
+                    reader.close()
+                }
+            }
+            SerializationFormat.JBON -> {
+                try {
+                    JBONParser(cfg).parse(inputStream)
+                } finally {
+                    inputStream.close()
+                }
+            }
+        }
+
+        val outputStream = output?.let {
+            BufferedOutputStream(Files.newOutputStream(it))
+        } ?: System.out
+        when(outputType) {
+            SerializationFormat.JSON -> {
+                val writer = OutputStreamWriter(outputStream)
+                try {
+                    JSONDumper(cfg).dump(result, writer)
+                } finally {
+                    writer.close()
+                }
+            }
+            SerializationFormat.JBON -> {
+                try {
+                    JBONDumper(cfg).dump(result, outputStream)
+                } finally {
+                    outputStream.close()
+                }
+            }
+        }
+    }
 }
 
+
 fun main(vararg args: String) {
-    val cliArg = CliArg()
-    val cliArgumentParser = JCommander.newBuilder()
-            .addObject(cliArg)
-            .build()
-    try {
-        cliArgumentParser.parse(*args)
-    } catch (pe: ParameterException) {
-        cliArgumentParser.usage()
-        exitProcess(-1)
+    val log = LoggerFactory.getLogger("wson-cli")
+    val commandLine = CommandLine(WsonCli())
+    commandLine.setExecutionExceptionHandler { ex, cl, parseResult ->
+        log.error(ex.message, ex)
+        CommandLine.ExitCode.SOFTWARE
     }
-    if (cliArg.help) {
-        cliArgumentParser.usage()
-        exitProcess(0)
-    }
-    val cfg = Value.Configuration.builder().serializeReferences(true).build()
-    val inputStream = if (cliArg.fileName != null) {
-        BufferedInputStream(Files.newInputStream(cliArg.fileName))
-    } else {
-        System.`in`
-    }
-
-    val result = when(cliArg.inputType) {
-        SerializationFormat.JSON -> {
-            val reader = InputStreamReader(inputStream)
-            try {
-                JSONParser(cfg).parse(reader)
-            } finally {
-                reader.close()
-            }
-        }
-        SerializationFormat.JBON -> {
-            try {
-                JBONParser(cfg).parse(inputStream)
-            } finally {
-                inputStream.close()
-            }
-        }
-    }
-
-    val outputStream = if (cliArg.output != null) {
-        BufferedOutputStream(Files.newOutputStream(cliArg.output))
-    } else {
-        System.out
-    }
-    when(cliArg.outputType) {
-        SerializationFormat.JSON -> {
-            val writer = OutputStreamWriter(outputStream)
-            try {
-                JSONDumper(cfg).dump(result, writer)
-            } finally {
-                writer.close()
-            }
-        }
-        SerializationFormat.JBON -> {
-            try {
-                JBONDumper(cfg).dump(result, outputStream)
-            } finally {
-                outputStream.close()
-            }
-        }
-    }
+    exitProcess(commandLine.execute(*args))
 }

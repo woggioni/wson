@@ -1,6 +1,7 @@
 package net.woggioni.wson.wcfg;
 
 import lombok.RequiredArgsConstructor;
+import net.woggioni.jwo.LazyValue;
 import net.woggioni.wson.traversal.ValueIdentity;
 import net.woggioni.wson.value.ObjectValue;
 import net.woggioni.wson.xface.Value;
@@ -11,53 +12,55 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import static net.woggioni.jwo.JWO.dynamicCast;
-
 @RequiredArgsConstructor
 public class CompositeObjectValue implements ObjectValue {
 
-    private final List<ObjectValue> elements;
+    private final List<? extends Value> elements;
 
-    private ObjectValue wrapped;
+    private LazyValue<ObjectValue> wrapped;
 
-    public CompositeObjectValue(List<ObjectValue> elements, Value.Configuration cfg) {
+    public CompositeObjectValue(List<? extends Value> elements, Value.Configuration cfg) {
         this.elements = elements;
-        wrapped = ObjectValue.newInstance(cfg);
-        List<ValueIdentity> identities = new ArrayList<>();
-        for (ObjectValue element : elements) {
-            CompositeObjectValue compositeObjectValue;
-            if ((compositeObjectValue = dynamicCast(element, CompositeObjectValue.class)) != null) {
-                boolean differenceFound = false;
-                for (int i = 0; i < compositeObjectValue.elements.size(); i++) {
-                    ObjectValue objectValue = compositeObjectValue.elements.get(i);
-                    if (!differenceFound && (i >= identities.size() || !Objects.equals(
-                            identities.get(i),
-                            new ValueIdentity(compositeObjectValue.elements.get(i))))) {
-                        differenceFound = true;
+        this.wrapped = LazyValue.of(() -> {
+            ObjectValue result = ObjectValue.newInstance(cfg);
+            List<ValueIdentity> identities = new ArrayList<>();
+            for (Value element : elements) {
+                if (element instanceof CompositeObjectValue compositeObjectValue) {
+                    boolean differenceFound = false;
+                    for (int i = 0; i < compositeObjectValue.elements.size(); i++) {
+                        ObjectValue objectValue = (ObjectValue) compositeObjectValue.elements.get(i);
+                        if (!differenceFound && (i >= identities.size() || !Objects.equals(
+                                identities.get(i),
+                                new ValueIdentity(compositeObjectValue.elements.get(i))))) {
+                            differenceFound = true;
+                        }
+                        if (differenceFound) {
+                            merge(result, objectValue);
+                            identities.add(new ValueIdentity(objectValue));
+                        }
                     }
-                    if (differenceFound) {
-                        merge(wrapped, objectValue);
-                        identities.add(new ValueIdentity(objectValue));
-                    }
+                } else {
+                    merge(result, (ObjectValue) element);
+                    identities.add(new ValueIdentity(element));
                 }
-            } else {
-                merge(wrapped, element);
-                identities.add(new ValueIdentity(element));
             }
-        }
+            return result;
+        }, LazyValue.ThreadSafetyMode.NONE);
     }
 
     private static void merge(ObjectValue v1, ObjectValue v2) {
         for (Map.Entry<String, Value> entry : v2) {
-            Value putResult = v1.getOrPut(entry.getKey(), entry.getValue());
-            if (putResult != entry.getValue()) {
-                if (putResult.type() == Value.Type.OBJECT && entry.getValue().type() == Value.Type.OBJECT) {
+            String key = entry.getKey();
+            Value value2put = entry.getValue();
+            Value putResult = v1.getOrPut(key, value2put);
+            if (putResult != value2put) {
+                if (putResult.type() == Value.Type.OBJECT && value2put.type() == Value.Type.OBJECT) {
                     ObjectValue ov = ObjectValue.newInstance();
                     merge(ov, (ObjectValue) putResult);
-                    merge(ov, (ObjectValue) entry.getValue());
-                    v1.put(entry.getKey(), ov);
+                    merge(ov, (ObjectValue) value2put);
+                    v1.put(key, ov);
                 } else {
-                    v1.put(entry.getKey(), entry.getValue());
+                    v1.put(key, value2put);
                 }
             }
         }
@@ -65,27 +68,27 @@ public class CompositeObjectValue implements ObjectValue {
 
     @Override
     public Iterator<Map.Entry<String, Value>> iterator() {
-        return wrapped.iterator();
+        return wrapped.get().iterator();
     }
 
     @Override
     public Value get(String key) {
-        return wrapped.get(key);
+        return wrapped.get().get(key);
     }
 
     @Override
     public Value getOrDefault(String key, Value defaultValue) {
-        return wrapped.getOrDefault(key, defaultValue);
+        return wrapped.get().getOrDefault(key, defaultValue);
     }
 
     @Override
     public boolean has(String key) {
-        return wrapped.has(key);
+        return wrapped.get().has(key);
     }
 
     @Override
     public int size() {
-        return wrapped.size();
+        return wrapped.get().size();
     }
 
     @Override

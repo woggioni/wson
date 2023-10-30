@@ -4,6 +4,7 @@ plugins {
 
 dependencies {
     implementation rootProject
+    runtimeOnly catalog.antlr.runtime
 
     testImplementation catalog.jwo
     testImplementation project(':test-utils')
@@ -11,7 +12,6 @@ dependencies {
     testImplementation catalog.xz
 
     antlr catalog.antlr
-    antlr catalog.antlr.runtime
 }
 
 generateGrammarSource {

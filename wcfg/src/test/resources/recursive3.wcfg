@@ -1,0 +1,5 @@
+value := [1, 2, value2, null, false];
+
+value2 := [3, 4, value, null, true, value3];
+
+value3 := {"key" : "Some string" };

@@ -1,15 +1,19 @@
 grammar WCFG;
 
 wcfg
-   : assignment*
+   : assignment* export?
    ;
 
+export
+    : 'export' value ';'
+    ;
+
 assignment
-   : IDENTIFIER ':=' (expression | value) ';'
+   : IDENTIFIER ':=' value ';'
    ;
 
 expression
-   : value ('<<' value)+
+   : (obj | IDENTIFIER) ('<<' (obj | IDENTIFIER))+
    ;
 
 obj
@@ -18,7 +22,7 @@ obj
    ;
 
 pair
-   : STRING ':' (expression | value)
+   : STRING ':' value
    ;
 
 array
@@ -34,6 +38,7 @@ value
    | IDENTIFIER
    | obj
    | array
+   | expression
    ;
 
 BOOLEAN

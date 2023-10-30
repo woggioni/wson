@@ -7,6 +7,9 @@ pluginManagement {
                 includeGroup 'net.woggioni.gradle.lombok'
                 includeGroup 'net.woggioni.gradle.envelope'
                 includeGroup 'net.woggioni.gradle.multi-release-jar'
+                includeGroup 'net.woggioni.gradle.graalvm.native-image'
+                includeGroup 'net.woggioni.gradle.graalvm.jlink'
+                includeGroup 'net.woggioni.gradle.sambal'
             }
         }
         gradlePluginPortal()
@@ -38,7 +41,6 @@ def includeDirs = [
     'wson-cli',
     'wson-w3c-json',
     'wcfg',
-    'wcfg-cli'
 ]
 
 includeDirs.each {
