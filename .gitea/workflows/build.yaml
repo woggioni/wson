@@ -13,4 +13,4 @@ jobs:
       - name: Execute Gradle build
         env:
           PUBLISHER_TOKEN: ${{ secrets.PUBLISHER_TOKEN }}
-        run: ./gradlew build publishMavenPublicationToGiteaRepository
+        run: ./gradlew build publish

@@ -8,6 +8,7 @@ plugins {
 }
 
 import net.woggioni.gradle.graalvm.NativeImageTask
+import net.woggioni.gradle.envelope.EnvelopeJarTask
 import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 
 dependencies {
@@ -56,6 +57,8 @@ configureNativeImage {
     mergeConfiguration = true
 }
 
+Provider<EnvelopeJarTask> envelopeJarTaskProvider = tasks.named('envelopeJar')
+
 Provider<NativeImageTask> nativeImageTaskProvider = tasks.named("nativeImage") {
     useMusl = true
     buildStaticImage = true
@@ -67,11 +70,12 @@ tasks.named(BasePlugin.ASSEMBLE_TASK_NAME, Task) {
 
 artifacts {
     archives nativeImageTaskProvider.map(NativeImageTask.&getOutputFile)
+    archives envelopeJarTaskProvider.map(EnvelopeJarTask.&getArchiveFile)
 }
 
 publishing {
     publications {
-        myDistribution(MavenPublication) {
+        maven(MavenPublication) {
             artifact envelopeJar
             def host = DefaultNativePlatform.host()
             artifact(

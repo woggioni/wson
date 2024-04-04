@@ -74,9 +74,6 @@ allprojects {
         publishing {
             repositories {
                 maven {
-                    url = 'https://mvn.woggioni.net/'
-                }
-                maven {
                     name = "Gitea"
                     url = uri(getProperty('gitea.maven.url'))
 
