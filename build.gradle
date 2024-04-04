@@ -1,5 +1,7 @@
 plugins {
+    id 'jacoco'
     id 'maven-publish'
+    alias catalog.plugins.multi.release.jar
     alias catalog.plugins.envelope apply false
     alias catalog.plugins.lombok apply false
 }
@@ -15,7 +17,7 @@ allprojects {
     java {
         modularity.inferModulePath = true
         toolchain {
-            languageVersion = JavaLanguageVersion.of(17)
+            languageVersion = JavaLanguageVersion.of(21)
             vendor = JvmVendorSpec.GRAAL_VM
         }
     }
@@ -26,14 +28,22 @@ allprojects {
 
     repositories {
         maven {
-            url = "https://woggioni.net/mvn/"
+            url = getProperty('gitea.maven.url')
             content {
-                includeGroup 'com.beust'
                 includeGroup 'com.lys'
                 includeGroup 'net.woggioni'
             }
         }
         mavenCentral()
+    }
+
+    pluginManager.withPlugin('jacoco') {
+        test {
+            finalizedBy jacocoTestReport
+        }
+        jacocoTestReport {
+            dependsOn test
+        }
     }
 
     dependencies {
@@ -59,6 +69,30 @@ allprojects {
             }
         }
     }
+
+    pluginManager.withPlugin('maven-publish') {
+        publishing {
+            repositories {
+                maven {
+                    url = 'https://mvn.woggioni.net/'
+                }
+                maven {
+                    name = "Gitea"
+                    url = uri(getProperty('gitea.maven.url'))
+
+                    credentials(HttpHeaderCredentials) {
+                        name = "Authorization"
+                        value = "token ${System.getenv()["PUBLISHER_TOKEN"]}"
+                    }
+
+                    authentication {
+                        header(HttpHeaderAuthentication)
+                    }
+
+                }
+            }
+        }
+    }
 }
 
 
@@ -79,12 +113,11 @@ compileJava {
     options.compilerArgs << '-parameters'
 }
 
+ext {
+    setProperty('jpms.module.name', 'net.woggioni.wson')
+}
+
 publishing {
-    repositories {
-        maven {
-            url = "https://mvn.woggioni.net/"
-        }
-    }
     publications {
         maven(MavenPublication) {
             from(components["java"])

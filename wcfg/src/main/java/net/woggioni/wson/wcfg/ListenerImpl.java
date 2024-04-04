@@ -89,9 +89,11 @@ class ListenerImpl implements WCFGListener {
             if (value == null) {
                 List<ObjectValue> objects = elements.stream()
                         .map(it -> {
-                            if (it instanceof ObjectValue ov)
+                            if (it instanceof ObjectValue) {
+                                ObjectValue ov = (ObjectValue) it;
                                 return ov;
-                            else if (it instanceof ValueHolder vh) {
+                            } else if (it instanceof ValueHolder) {
+                                ValueHolder vh = (ValueHolder) it;
                                 return (ObjectValue) vh.getDelegate();
                             } else {
                                 throw newThrowable(RuntimeException.class, "");
@@ -108,32 +110,39 @@ class ListenerImpl implements WCFGListener {
 
     private void add2Last(Value value) {
         StackLevel last = tail(stack);
-        if (last instanceof ArrayStackLevel asl) {
+        if (last instanceof ArrayStackLevel) {
+            ArrayStackLevel asl = (ArrayStackLevel) last;
             asl.value.add(value);
-            if (value instanceof ValueHolder holder) {
+            if (value instanceof ValueHolder) {
+                ValueHolder holder = (ValueHolder) value;
                 Value arrayValue = asl.getValue();
                 int index = arrayValue.size() - 1;
                 holder.addDeleter(() -> arrayValue.set(index, holder.getDelegate()));
             }
-        } else if (last instanceof ObjectStackLevel osl) {
+        } else if (last instanceof ObjectStackLevel) {
+            ObjectStackLevel osl = (ObjectStackLevel) last;
             String key = osl.currentKey;
             Value objectValue = osl.getValue();
             objectValue.put(key, value);
-            if (value instanceof ValueHolder holder) {
+            if (value instanceof ValueHolder) {
+                ValueHolder holder = (ValueHolder) value;
                 holder.addDeleter(() -> {
                     objectValue.put(key, holder.getDelegate());
                 });
             }
-        } else if (last instanceof ExpressionStackLevel esl) {
+        } else if (last instanceof ExpressionStackLevel) {
+            ExpressionStackLevel esl = (ExpressionStackLevel) last;
             List<Value> values = esl.elements;
             int index = values.size();
             values.add(value);
-            if (value instanceof ValueHolder holder) {
+            if (value instanceof ValueHolder) {
+                ValueHolder holder = (ValueHolder) value;
                 holder.addDeleter(() -> {
                     values.set(index, holder.getDelegate());
                 });
             }
-        } else if (last instanceof ExportStackLevel esl) {
+        } else if (last instanceof ExportStackLevel) {
+            ExportStackLevel esl = (ExportStackLevel) last;
             esl.setValue(value);
         }
     }
@@ -320,7 +329,8 @@ class ListenerImpl implements WCFGListener {
     @Override
     public void exitExport(WCFGParser.ExportContext ctx) {
         result = pop().getValue();
-        if (result instanceof ValueHolder holder) {
+        if (result instanceof ValueHolder) {
+            ValueHolder holder = (ValueHolder) result;
             holder.addDeleter(() -> {
                 result = holder.getDelegate();
             });

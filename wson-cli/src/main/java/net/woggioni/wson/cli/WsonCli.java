@@ -11,7 +11,7 @@ import picocli.CommandLine;
         subcommands = {WsonCommand.class, WcfgCommand.class})
 public class WsonCli implements Runnable {
     public static void main(String[] args) {
-        final var commandLine = new CommandLine(new WsonCli());
+        final CommandLine commandLine = new CommandLine(new WsonCli());
         commandLine.setExecutionExceptionHandler((ex, cl, parseResult) -> {
             log.error(ex.getMessage(), ex);
             return CommandLine.ExitCode.SOFTWARE;

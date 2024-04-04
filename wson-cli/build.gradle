@@ -1,12 +1,14 @@
 plugins {
     id 'maven-publish'
+    id 'jacoco'
+    alias catalog.plugins.multi.release.jar
     alias catalog.plugins.envelope
     alias catalog.plugins.graalvm.native.image
     alias catalog.plugins.sambal
 }
+
 import net.woggioni.gradle.graalvm.NativeImageTask
 import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
-
 
 dependencies {
     implementation catalog.jwo
@@ -59,16 +61,15 @@ Provider<NativeImageTask> nativeImageTaskProvider = tasks.named("nativeImage") {
     buildStaticImage = true
 }
 
+tasks.named(BasePlugin.ASSEMBLE_TASK_NAME, Task) {
+    inputs.files(nativeImageTaskProvider)
+}
+
 artifacts {
     archives nativeImageTaskProvider.map(NativeImageTask.&getOutputFile)
 }
 
 publishing {
-    repositories {
-        maven {
-            url = "https://mvn.woggioni.net/"
-        }
-    }
     publications {
         myDistribution(MavenPublication) {
             artifact envelopeJar

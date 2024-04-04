@@ -25,7 +25,8 @@ public class CompositeObjectValue implements ObjectValue {
             ObjectValue result = ObjectValue.newInstance(cfg);
             List<ValueIdentity> identities = new ArrayList<>();
             for (Value element : elements) {
-                if (element instanceof CompositeObjectValue compositeObjectValue) {
+                if (element instanceof CompositeObjectValue) {
+                    CompositeObjectValue compositeObjectValue = (CompositeObjectValue) element;
                     boolean differenceFound = false;
                     for (int i = 0; i < compositeObjectValue.elements.size(); i++) {
                         ObjectValue objectValue = (ObjectValue) compositeObjectValue.elements.get(i);

@@ -21,7 +21,7 @@ enum SerializationFormat {
                 .filter(sf -> Objects.equals(sf.name, value))
                 .findFirst()
                 .orElseThrow(() -> {
-                    var availableValues = Stream.of(
+                    String availableValues = Stream.of(
                             JSON,
                             JBON
                     ).map(SerializationFormat::name).collect(Collectors.joining(", "));

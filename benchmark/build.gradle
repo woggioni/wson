@@ -18,7 +18,6 @@ dependencies {
 
     implementation catalog.jwo
     implementation catalog.xz
-    implementation catalog.jcommander
     implementation catalog.jackson.databind
 
     runtimeOnly project(':test-utils')

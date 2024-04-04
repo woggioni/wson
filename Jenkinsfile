@@ -6,13 +6,24 @@ pipeline {
     stages {
         stage("Build") {
             steps {
-                sh "./gradlew clean assemble build"
-                junit testResults: "build/test-results/test/*.xml"
-                javadoc javadocDir: "build/docs/javadoc", keepAll: true
-                archiveArtifacts artifacts: 'build/libs/*.jar,benchmark/build/libs/*.jar,wson-cli/build/libs/wson-cli-envelope-*.jar,wson-cli/build/libs/wson-cli',
-                                 allowEmptyArchive: true,
-                                 fingerprint: true,
-                                 onlyIfSuccessful: true
+                sh "./gradlew build"
+            }
+            post {
+                always {
+                    junit '**/build/test-results/test/*.xml'
+                }
+                success {
+                    jacoco(
+                        execPattern: '**/build/jacoco/*.exec',
+                        classPattern: '**/build/classes/java/main',
+                        sourcePattern: '**/src/main'
+                    )
+                    javadoc javadocDir: "build/docs/javadoc", keepAll: true
+                    archiveArtifacts artifacts: '**/build/libs/*.jar,wson-cli/build/libs/wson-cli',
+                                     allowEmptyArchive: false,
+                                     fingerprint: true,
+                                     onlyIfSuccessful: true
+                }
             }
         }
         stage("Publish") {
