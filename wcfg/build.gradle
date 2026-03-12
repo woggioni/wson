@@ -1,7 +1,6 @@
 plugins {
     id 'antlr'
     id 'jacoco'
-    alias catalog.plugins.multi.release.jar
 }
 
 configurations {

@@ -1,7 +1,6 @@
 plugins {
     id 'jacoco'
     id 'maven-publish'
-    alias catalog.plugins.multi.release.jar
     alias catalog.plugins.envelope apply false
     alias catalog.plugins.lombok apply false
 }
@@ -17,8 +16,8 @@ allprojects {
     java {
         modularity.inferModulePath = true
         toolchain {
-            languageVersion = JavaLanguageVersion.of(21)
-            vendor = JvmVendorSpec.ORACLE
+            languageVersion = JavaLanguageVersion.of(25)
+            vendor = JvmVendorSpec.GRAAL_VM
         }
     }
 
@@ -48,10 +47,12 @@ allprojects {
 
     dependencies {
         implementation catalog.xz
+        compileOnly catalog.lombok
 
         testImplementation catalog.junit.jupiter.api
         testImplementation catalog.junit.jupiter.params
         testRuntimeOnly catalog.junit.jupiter.engine
+        testRuntimeOnly catalog.junit.platform.launcher
     }
 
     test {

@@ -20,18 +20,14 @@ abstract class AbstractVersionProvider implements CommandLine.IVersionProvider {
     protected AbstractVersionProvider(String specificationTitle) {
         String version = null;
         String vcsHash = null;
-        Enumeration<URL> it = getClass().getClassLoader().getResources(JarFile.MANIFEST_NAME);
-        while (it.hasMoreElements()) {
-            URL manifestURL = it.nextElement();
-            Manifest mf = new Manifest();
-            try (InputStream inputStream = manifestURL.openStream()) {
-                mf.read(inputStream);
-            }
-            Attributes mainAttributes = mf.getMainAttributes();
-            if (Objects.equals(specificationTitle, mainAttributes.getValue(Attributes.Name.SPECIFICATION_TITLE))) {
-                version = mainAttributes.getValue(Attributes.Name.SPECIFICATION_VERSION);
-                vcsHash = mainAttributes.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
-            }
+        final Manifest mf = new Manifest();
+        try(InputStream is = getClass().getModule().getResourceAsStream(JarFile.MANIFEST_NAME)) {
+            mf.read(is);
+        }
+        Attributes mainAttributes = mf.getMainAttributes();
+        if (Objects.equals(specificationTitle, mainAttributes.getValue(Attributes.Name.SPECIFICATION_TITLE))) {
+            version = mainAttributes.getValue(Attributes.Name.SPECIFICATION_VERSION);
+            vcsHash = mainAttributes.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
         }
         if (version == null || vcsHash == null) {
             throw new RuntimeException("Version information not found in manifest");

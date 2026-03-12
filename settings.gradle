@@ -6,7 +6,6 @@ pluginManagement {
                 includeGroup 'net.woggioni.gradle'
                 includeGroup 'net.woggioni.gradle.lombok'
                 includeGroup 'net.woggioni.gradle.envelope'
-                includeGroup 'net.woggioni.gradle.multi-release-jar'
                 includeGroup 'net.woggioni.gradle.graalvm.native-image'
                 includeGroup 'net.woggioni.gradle.graalvm.jlink'
                 includeGroup 'net.woggioni.gradle.sambal'
@@ -28,6 +27,7 @@ dependencyResolutionManagement {
     versionCatalogs {
         catalog {
             from group: 'com.lys', name: 'lys-catalog', version: getProperty('lys.version')
+            version('my-gradle-plugins', '2026.02.23')
         }
     }
 }

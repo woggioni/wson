@@ -1,14 +1,13 @@
 plugins {
     id 'maven-publish'
     id 'jacoco'
-    alias catalog.plugins.multi.release.jar
     alias catalog.plugins.envelope
     alias catalog.plugins.graalvm.native.image
     alias catalog.plugins.sambal
 }
-
-import net.woggioni.gradle.graalvm.NativeImageTask
 import net.woggioni.gradle.envelope.EnvelopeJarTask
+import net.woggioni.gradle.envelope.EnvelopePlugin
+import net.woggioni.gradle.graalvm.*
 import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 
 dependencies {
@@ -19,9 +18,12 @@ dependencies {
     implementation project(':wcfg')
 }
 
-application {
-    mainClass = 'net.woggioni.wson.cli.WsonCli'
-    mainModule = 'net.woggioni.wson.cli'
+Property<String> mainClassName = objects.property(String.class).convention('net.woggioni.wson.cli.WsonCli')
+Property<String> mainModuleName = objects.property(String.class).convention('net.woggioni.wson.cli')
+
+envelopeJar {
+    mainClass = mainClassName
+    mainModule = mainModuleName
 }
 
 compileJava {
@@ -33,17 +35,16 @@ compileJava {
     options.javaModuleVersion = project.version
 }
 
-configureNativeImage {
-//    args = [
-//        'wson',
-//        '-f',
-//        '../test-utils/src/main/resources/wordpress.json',
-//        '-t',
-//        'jbon',
-//        '-o',
-//        '/dev/null'
-//    ]
-
+tasks.named(NativeImagePlugin.CONFIGURE_NATIVE_IMAGE_TASK_NAME, NativeImageConfigurationTask) {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+        vendor = JvmVendorSpec.GRAAL_VM
+    }
+    mainClass = mainClassName
+    mainModule = mainModuleName
+    mergeConfiguration = true
+    modularity.inferModulePath = true
+    enabled = true
     args = [
             'wcfg',
             '-f',
@@ -53,24 +54,34 @@ configureNativeImage {
             '-o',
             '/dev/null'
     ]
-
-    mergeConfiguration = true
 }
 
-Provider<EnvelopeJarTask> envelopeJarTaskProvider = tasks.named('envelopeJar')
-
-Provider<NativeImageTask> nativeImageTaskProvider = tasks.named("nativeImage") {
+nativeImage {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+        vendor = JvmVendorSpec.GRAAL_VM
+    }
+    mainClass = mainClassName
+    mainModule = mainModuleName
     useMusl = true
     buildStaticImage = true
+    linkAtBuildTime = false
+    compressExecutable = true
+    compressionLevel = 6
+    useLZMA = false
 }
 
-tasks.named(BasePlugin.ASSEMBLE_TASK_NAME, Task) {
-    inputs.files(nativeImageTaskProvider)
+Provider<UpxTask> upxTaskProvider = tasks.named(NativeImagePlugin.UPX_TASK_NAME, UpxTask) {
+}
+
+Provider<EnvelopeJarTask> envelopeJarTaskProvider = tasks.named(EnvelopePlugin.ENVELOPE_JAR_TASK_NAME, EnvelopeJarTask.class) {
+    mainModule = mainModuleName
+    mainClass = mainClassName
 }
 
 artifacts {
-    archives nativeImageTaskProvider.map(NativeImageTask.&getOutputFile)
-    archives envelopeJarTaskProvider.map(EnvelopeJarTask.&getArchiveFile)
+    add('archives', upxTaskProvider)
+    add('archives', envelopeJarTaskProvider)
 }
 
 publishing {
@@ -78,10 +89,10 @@ publishing {
         maven(MavenPublication) {
             artifact envelopeJar
             def host = DefaultNativePlatform.host()
-            artifact(
-                source: nativeImageTaskProvider,
-                classifier: host.operatingSystem.name + '-' + host.architecture.name
-            )
+            artifact(upxTaskProvider) {
+                extension = "exe"
+                classifier = host.operatingSystem.name + '-' + host.architecture.name
+            }
         }
     }
 }
