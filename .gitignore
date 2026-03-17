@@ -1,5 +1,9 @@
 build
+bin
 target
 .idea
 .gradle
-
+.classpath
+.factorypath
+.project
+.settings
